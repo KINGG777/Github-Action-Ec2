@@ -104,6 +104,193 @@ Your branch is up to date with 'origin/main'.
 
 ---
 
+---
+
+# Step 2 - Configure Nginx Reverse Proxy
+
+## Install Nginx
+
+Install Nginx on the Ubuntu server.
+
+```bash
+sudo apt update
+sudo apt install nginx -y
+```
+
+Verify the installation.
+
+```bash
+nginx -v
+```
+
+Start and enable the Nginx service.
+
+```bash
+sudo systemctl start nginx
+sudo systemctl enable nginx
+```
+
+---
+
+## Create a Reverse Proxy Configuration
+
+Create a new Nginx configuration file.
+
+```bash
+sudo nano /etc/nginx/sites-available/ok
+```
+
+Paste the following configuration.
+
+```nginx
+server {
+
+    listen 80;
+
+    server_name _;
+
+    location / {
+
+        proxy_pass http://127.0.0.1:3000;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Upgrade $http_upgrade;
+
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_cache_bypass $http_upgrade;
+
+    }
+
+}
+```
+
+Save the file.
+
+---
+
+## Enable the Configuration
+
+Enable the website by creating a symbolic link.
+
+```bash
+sudo ln -s /etc/nginx/sites-available/ok /etc/nginx/sites-enabled/
+```
+
+> **Explanation**
+>
+> - `sites-available` stores all Nginx configuration files.
+> - `sites-enabled` contains only the active configurations.
+> - `ln -s` creates a symbolic link (shortcut) from the configuration file to the enabled directory.
+
+---
+
+## Remove the Default Site
+
+Disable the default Nginx configuration.
+
+```bash
+sudo rm -f /etc/nginx/sites-enabled/default
+```
+
+---
+
+## Test the Configuration
+
+Verify the Nginx configuration.
+
+```bash
+sudo nginx -t
+```
+
+Expected Output
+
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+---
+
+## Restart Nginx
+
+Restart the service.
+
+```bash
+sudo systemctl restart nginx
+```
+
+Verify the status.
+
+```bash
+sudo systemctl status nginx
+```
+
+Expected Output
+
+```
+Active: active (running)
+```
+
+---
+
+## Verify the Reverse Proxy
+
+Ensure the Node.js application is running on **port 3000**.
+
+```bash
+pm2 status
+```
+
+Open the application in your browser.
+
+```
+http://EC2_PUBLIC_IP
+```
+
+Instead of accessing:
+
+```
+http://EC2_PUBLIC_IP:3000
+```
+
+Nginx receives requests on **port 80** and forwards them internally to the Node.js application running on **port 3000**.
+
+---
+
+## Reverse Proxy Architecture
+
+```
+Browser
+     │
+     ▼
+Port 80
+     │
+     ▼
+Nginx
+     │
+     ▼
+localhost:3000
+     │
+     ▼
+Node.js Application
+     │
+     ▼
+PM2
+```
+
+---
+
 # Step 2 - Generate an SSH Key Pair
 
 Generate a dedicated deployment SSH key.
