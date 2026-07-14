@@ -23,6 +23,9 @@ jobs:
       - name: Deploy Application
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+
+            git config --global --add safe.directory ${{ secrets.TARGET_DIR }}
+            
             cd ${{ secrets.TARGET_DIR }}
 
             git fetch origin
