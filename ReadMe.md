@@ -240,16 +240,28 @@ jobs:
       - name: Deploy Application
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << EOF
+
+            # Mark the repository as a trusted Git directory
+            git config --global --add safe.directory ${{ secrets.TARGET_DIR }}
+
+            # Navigate to the application directory
             cd ${{ secrets.TARGET_DIR }}
 
+            # Fetch the latest code from GitHub
             git fetch origin
+
+            # Synchronize the local repository with the main branch
             git reset --hard origin/main
+
+            # Remove untracked files and directories
             git clean -fd
 
-            # Restart application if required
-            # sudo systemctl restart apache2
-            # sudo systemctl restart nginx
-            # pm2 restart all
+            # Install dependencies (if required)
+            # npm install
+
+            # Restart the application (if required)
+            # pm2 restart myapp
+
           EOF
 ```
 
@@ -265,7 +277,7 @@ git push origin main
 
 # Step 6 - Trigger Deployment
 
-Merge a Pull Request into the `main` branch.
+Merge a Pull Request into the **main** branch.
 
 GitHub Actions automatically starts the deployment workflow.
 
@@ -337,6 +349,32 @@ Verify that:
 
 ---
 
+## Fatal: Detected Dubious Ownership
+
+If Git displays the following error:
+
+```
+fatal: detected dubious ownership in repository
+```
+
+Mark the deployment directory as a trusted Git repository.
+
+For `/var/www/html`:
+
+```bash
+git config --global --add safe.directory /var/www/html
+```
+
+For `/var/www/ok`:
+
+```bash
+git config --global --add safe.directory /var/www/ok
+```
+
+It is recommended to include this command inside the GitHub Actions deployment workflow before executing any Git commands.
+
+---
+
 ## GitHub Action Failed
 
 Check:
@@ -383,8 +421,15 @@ SSH Login
 Navigate to /var/www/html
       │
       ▼
+git config --global --add safe.directory
+      │
+      ▼
 git fetch
+      │
+      ▼
 git reset --hard origin/main
+      │
+      ▼
 git clean -fd
       │
       ▼
@@ -403,5 +448,6 @@ Deployment Completed
 - GitHub Secrets Integration
 - Zero Manual Deployment
 - Production-Ready Workflow
+- Handles Git "Dubious Ownership" Issues
 - Easy Maintenance
 - Consistent Deployments
