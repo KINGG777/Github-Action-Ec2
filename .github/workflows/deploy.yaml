@@ -27,7 +27,6 @@ jobs:
             git config --global --add safe.directory ${{ secrets.TARGET_DIR }}
             
             cd ${{ secrets.TARGET_DIR }}
-
             git fetch origin
 
             git reset --hard origin/main
